@@ -158,10 +158,24 @@ You should start to see high quality results after ~50 examples but for best res
     wandb login <wandb token>
     accelerate launch train.py
    ```
+<br>
+<br>
 
-# Checklist
-
-- [x] Release 3b pretrained model and finetuned models
-- [ ] Release pretrained and finetuned models in sizes: 1b, 400m, 150m parameters
-- [ ] Fix glitch in realtime streaming package that occasionally skips frames.
-- [ ] Fix voice cloning Colab notebook implementation
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="
+      https://api.star-history.com/svg?repos=Saganaki22/OrpheusTTS-WebUI&type=Date&theme=dark
+    "
+  />
+  <source
+    media="(prefers-color-scheme: light)"
+    srcset="
+      https://api.star-history.com/svg?repos=Saganaki22/OrpheusTTS-WebUI&type=Date
+    "
+  />
+  <img
+    alt="Star History Chart"
+    src="https://api.star-history.com/svg?repos=Saganaki22/OrpheusTTS-WebUI&type=Date"
+  />
+</picture>
