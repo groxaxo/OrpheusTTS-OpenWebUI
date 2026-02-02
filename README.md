@@ -103,6 +103,11 @@ If you encounter "KV cache" errors, the setup script should address these automa
 
 # Official Orpheus TTS Documentation
 
+## ✨ Upstream Updates
+
+- **[5/2025]** Partnered with [Baseten](https://www.baseten.co/blog/canopy-labs-selects-baseten-as-preferred-inference-provider-for-orpheus-tts-model) for optimized inference at fp8 and fp16. See [deployment guide](/additional_inference_options/baseten_inference_example/README.md).
+- **[4/2025]** Released [multilingual models](https://huggingface.co/collections/canopylabs/orpheus-multilingual-research-release-67f5894cd16794db163786ba) with [training guide](https://canopylabs.ai/releases/orpheus_can_speak_any_language#training).
+
 ## Overview
 Orpheus TTS is an open-source text-to-speech system built on the Llama-3b backbone. Orpheus demonstrates the emergent capabilities of using LLMs for speech synthesis. We offer comparisons of the models below to leading closed models like Eleven Labs and PlayHT in our blog post.
 
@@ -150,7 +155,7 @@ This is a very simple process analogous to tuning an LLM using Trainer and Trans
 You should start to see high quality results after ~50 examples but for best results, aim for 300 examples/speaker.
 
 1. Your dataset should be a huggingface dataset in [this format](https://huggingface.co/datasets/canopylabs/zac-sample-dataset)
-2. We prepare the data using this [this notebook](https://colab.research.google.com/drive/1wg_CPCA-MzsWtsujwy-1Ovhv-tn8Q1nD?usp=sharing). This pushes an intermediate dataset to your Hugging Face account which you can can feed to the training script in finetune/train.py. Preprocessing should take less than 1 minute/thousand rows.
+2. We prepare the data using [this notebook](https://colab.research.google.com/drive/1wg_CPCA-MzsWtsujwy-1Ovhv-tn8Q1nD?usp=sharing). This pushes an intermediate dataset to your Hugging Face account which you can can feed to the training script in finetune/train.py. Preprocessing should take less than 1 minute/thousand rows.
 3. Modify the `finetune/config.yaml` file to include your dataset and training properties, and run the training script. You can additionally run any kind of huggingface compatible process like Lora to tune the model.
    ```bash
     pip install transformers datasets wandb trl flash_attn torch
@@ -158,6 +163,39 @@ You should start to see high quality results after ~50 examples but for best res
     wandb login <wandb token>
     accelerate launch train.py
    ```
+
+### Additional Finetuning Resources
+- [LoRA Finetuning](finetune/lora.py) - Parameter-efficient finetuning with LoRA
+- [PEFT finetuning with Unsloth](https://github.com/unslothai/notebooks/blob/main/nb/Orpheus_(3B)-TTS.ipynb)
+
+## Pretrain Model
+
+This is a very simple process analogous to training an LLM using Trainer and Transformers.
+
+The base model provided is trained over 100k hours. We recommend not using synthetic data for training as it produces worse results when you try to finetune specific voices, probably because synthetic voices lack diversity and map to the same set of tokens when tokenised (i.e. lead to poor codebook utilisation).
+
+We train the 3b model on sequences of length 8192 - we use the same dataset format for TTS finetuning for the <TTS-dataset> pretraining. We chain input_ids sequences together for more efficient training. The text dataset required is in the form described in this issue [#37](https://github.com/canopyai/Orpheus-TTS/issues/37). 
+
+If you are doing extended training this model, i.e. for another language or style we recommend starting with finetuning only (no text dataset). The main idea behind the text dataset is discussed in the blog post. (tldr; doesn't forget too much semantic/reasoning ability so its able to better understand how to intone/express phrases when spoken, however most of the forgetting would happen very early on in the training i.e. <100000 rows), so unless you are doing very extended finetuning it may not make too much of a difference.
+
+## Additional Inference Options
+
+1. **Watermark your audio**: Use Silent Cipher to watermark your audio generation; see [Watermark Audio Implementation](additional_inference_options/watermark_audio) for details.
+2. **No-GPU Inference**: Run Orpheus on CPU using orpheus-cpp; see [No-GPU Guide](additional_inference_options/no_gpu/README.md).
+3. **Baseten Deployment**: Production-ready deployment with fp8/fp16 support; see [Baseten Guide](additional_inference_options/baseten_inference_example/README.md).
+
+## Community Implementations
+
+While we can't verify these implementations are completely accurate/bug free, they have been recommended on forums:
+
+1. [A lightweight client for running Orpheus TTS locally using LM Studio API](https://github.com/isaiahbjork/orpheus-tts-local)
+2. [Open AI compatible Fast-API implementation](https://github.com/Lex-au/Orpheus-FastAPI)
+3. [Gradio WebUI that runs smoothly on WSL and CUDA](https://github.com/Saganaki22/OrpheusTTS-WebUI) (this repository)
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
 <br>
 <br>
 
