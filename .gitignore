@@ -19,3 +19,29 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Environment files
+.env
+
+# Output directories
+outputs/
+*.wav
+*.mp3
+
+# Temporary files
+longform_*/
+temp_batch_*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Virtual environments
+venv/
+.venv/
+env/
