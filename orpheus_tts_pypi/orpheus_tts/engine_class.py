@@ -13,7 +13,7 @@ class OrpheusModel:
         self.dtype = dtype
         self.engine_kwargs = engine_kwargs  # vLLM engine kwargs
         self.engine = self._setup_engine()
-        self.available_voices = ["zoe", "zac","jess", "leo", "mia", "julia", "leah"]
+        self.available_voices = ["zoe", "zac", "jess", "leo", "mia", "julia", "leah"]
         
         # Use provided tokenizer path or default to model_name
         tokenizer_path = tokenizer if tokenizer else model_name
@@ -51,7 +51,7 @@ class OrpheusModel:
         if (model_name  in unsupported_models):
             raise ValueError(f"Model {model_name} is not supported. Only medium-3b is supported, small, micro and nano models will be released very soon")
         elif model_name in model_map:
-            return model_name[model_name]["repo_id"]
+            return model_map[model_name]["repo_id"]
         else:
             return model_name
         
@@ -66,7 +66,7 @@ class OrpheusModel:
     
     def validate_voice(self, voice):
         if voice:
-            if voice not in self.engine.available_voices:
+            if voice not in self.available_voices:
                 raise ValueError(f"Voice {voice} is not available for model {self.model_name}")
     
     def _format_prompt(self, prompt, voice="tara", model_type="larger"):
