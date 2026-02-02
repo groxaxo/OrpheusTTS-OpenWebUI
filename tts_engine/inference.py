@@ -34,11 +34,18 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-# Helper to detect if running in Uvicorn's reloader
+# Helper to detect if running in Uvicorn's reloader subprocess
+# This uses an environment variable approach which is more reliable than
+# checking sys.argv patterns that may vary between uvicorn versions
 def is_reloader_process():
-    """Check if the current process is a uvicorn reloader"""
-    return (sys.argv[0].endswith('_continuation.py') or 
-            os.environ.get('UVICORN_STARTED') == 'true')
+    """
+    Check if the current process is a uvicorn reloader subprocess.
+    
+    Uses an environment variable flag that gets set on first run.
+    If UVICORN_STARTED is already set when this process starts,
+    then this is a reload/subprocess, not the original process.
+    """
+    return os.environ.get('UVICORN_STARTED') == 'true'
 
 IS_RELOADER = is_reloader_process()
 if not IS_RELOADER:
@@ -308,18 +315,45 @@ def generate_tokens_from_api(
                 return
 
 
+# SNAC model singleton for efficient audio decoding
+_snac_model = None
+_snac_device = None
+
+
+def _get_snac_model():
+    """Get or initialize the SNAC model (singleton pattern)."""
+    global _snac_model, _snac_device
+    
+    if _snac_model is None:
+        try:
+            from snac import SNAC
+            _snac_device = "cuda" if torch.cuda.is_available() else "cpu"
+            _snac_model = SNAC.from_pretrained("hubertsiuzdak/snac_24khz").eval().to(_snac_device)
+            if not IS_RELOADER:
+                logger.info(f"SNAC model loaded on {_snac_device}")
+        except ImportError:
+            logger.error("SNAC library not installed. Run: pip install snac")
+            return None, None
+        except Exception as e:
+            logger.error(f"Error loading SNAC model: {e}")
+            return None, None
+    
+    return _snac_model, _snac_device
+
+
 def convert_to_audio(multiframe: List[int], count: int) -> Optional[bytes]:
     """
     Convert token frames to audio.
     
     This requires the SNAC model for audio decoding.
+    Uses a singleton pattern for efficient model reuse.
     """
+    model, snac_device = _get_snac_model()
+    
+    if model is None:
+        return None
+    
     try:
-        from snac import SNAC
-        
-        snac_device = "cuda" if torch.cuda.is_available() else "cpu"
-        model = SNAC.from_pretrained("hubertsiuzdak/snac_24khz").eval().to(snac_device)
-        
         if len(multiframe) < 7:
             return None
         
@@ -371,9 +405,6 @@ def convert_to_audio(multiframe: List[int], count: int) -> Optional[bytes]:
         perf_monitor.add_audio_chunk()
         return audio_bytes
         
-    except ImportError:
-        logger.error("SNAC library not installed. Run: pip install snac")
-        return None
     except Exception as e:
         logger.error(f"Error converting to audio: {e}")
         return None

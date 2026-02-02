@@ -475,7 +475,7 @@ class TextSanitizer:
         # Titles - only when followed by a capital letter
         text = re.sub(r"\bDr\.(?=\s+[A-Z])", "Doctor", text)
         text = re.sub(r"\bMr\.(?=\s+[A-Z])", "Mister", text)
-        text = re.sub(r"\bMs\.(?=\s+[A-Z])", "Miss", text)
+        text = re.sub(r"\bMs\.(?=\s+[A-Z])", "Ms", text)  # Pronounced "mizz"
         text = re.sub(r"\bMrs\.(?=\s+[A-Z])", "Mrs", text)
         text = re.sub(r"\bProf\.(?=\s+[A-Z])", "Professor", text)
         
