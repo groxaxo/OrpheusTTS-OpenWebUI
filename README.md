@@ -1,18 +1,28 @@
-# OrpheusTTS-WebUI
+# OrpheusTTS-OpenWebUI
 
-This is a fork of the [Orpheus TTS](https://github.com/canopyai/Orpheus-TTS) project, adding a Gradio WebUI that runs smoothly on WSL and CUDA.
+This is a fork of the [Orpheus TTS](https://github.com/canopyai/Orpheus-TTS) project, adding:
+- **Gradio WebUI** for easy text-to-speech generation
+- **FastAPI Server** with OpenAI-compatible API endpoints
+- **LMStudio Integration** for using any Orpheus GGUF model
+- **Text Sanitization** for better pronunciation of URLs, numbers, etc.
 
 ![image](https://github.com/user-attachments/assets/4b738f1d-23ed-477b-ac84-db0d5b04c76c)
 
 https://github.com/user-attachments/assets/5e441285-b10f-4149-b691-df061c5ddcbb
 
-## ✅ Latest Updates (20/03/2025)
+## ✅ Latest Updates
+
+### 🆕 FastAPI Server with LMStudio Integration
+- **OpenAI-Compatible API**: Use the `/v1/audio/speech` endpoint for easy integration
+- **Any Orpheus GGUF Model**: Works with any Orpheus model loaded in LMStudio
+- **Text Sanitization**: Automatic normalization of URLs, emails, numbers, money, time, and more
+- **Web UI**: Simple browser-based interface for testing
 
 ### Long-Form Text Processing
 - **Tabbed Interface**: The UI now features a dedicated "Long Form Content" tab for processing larger text inputs
 - **Smart Text Chunking**: Automatically splits long text into smaller chunks at sentence boundaries
 - **Parallel Processing**: Processes multiple chunks simultaneously for faster generation
-- **Seamless Audio Stitching**: Combines multiple audio segments into one cohesive output file
+- **Seamless Audio Stitching**: Combines multiple audio segments into one cohesive output file with crossfading
 - **Progress Tracking**: Real-time progress indicators during the generation process
 
 ### Technical Improvements
@@ -24,17 +34,74 @@ https://github.com/user-attachments/assets/5e441285-b10f-4149-b691-df061c5ddcbb
 ## Features
 
 - **Easy-to-use Web Interface**: Simple Gradio UI for text-to-speech generation
+- **FastAPI Server**: OpenAI-compatible API for programmatic access
+- **LMStudio Support**: Use any Orpheus GGUF model pre-loaded in LMStudio
+- **Text Sanitization**: Automatic handling of URLs, numbers, currencies, etc.
 - **WSL & CUDA Compatible**: Optimized for Windows Subsystem for Linux with CUDA support
 - **Memory Optimized**: Addresses common memory issues on consumer GPUs
-- **Voice Selection**: Access to all 8 voices from the original model
+- **Voice Selection**: Access to all voices from the original model (8+ languages)
 - **Emotive Tags Support**: Full support for all emotion tags
 
-## Quick Start (WSL/Linux)
+## Quick Start - FastAPI Server (LMStudio)
+
+### 1. Start LMStudio with Orpheus Model
+
+1. Download any Orpheus GGUF model (e.g., `Orpheus-3b-FT-Q8_0.gguf`, `Orpheus-3b-FT-Q4_K_M.gguf`)
+2. Load the model in LMStudio
+3. Start the local server (default: `http://127.0.0.1:1234`)
+
+### 2. Configure and Start the FastAPI Server
 
 ```bash
 # Clone the repository
-git clone https://github.com/Saganaki22/OrpheusTTS-WebUI.git
-cd OrpheusTTS-WebUI
+git clone https://github.com/groxaxo/OrpheusTTS-OpenWebUI.git
+cd OrpheusTTS-OpenWebUI
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env to configure your LMStudio URL if needed
+
+# Start the FastAPI server
+python app.py
+```
+
+### 3. Use the API
+
+**Web UI**: Open http://localhost:5005 in your browser
+
+**cURL Example**:
+```bash
+curl -X POST http://localhost:5005/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -d '{"input": "Hello, world!", "voice": "tara"}' \
+  --output speech.wav
+```
+
+**Python Example**:
+```python
+import requests
+
+response = requests.post(
+    "http://localhost:5005/v1/audio/speech",
+    json={"input": "Hello, world!", "voice": "tara"}
+)
+with open("speech.wav", "wb") as f:
+    f.write(response.content)
+```
+
+## Quick Start - Gradio WebUI (WSL/Linux)
+
+```bash
+# Clone the repository
+git clone https://github.com/groxaxo/OrpheusTTS-OpenWebUI.git
+cd OrpheusTTS-OpenWebUI
 
 # Run the setup script
 chmod +x setup_orpheus.sh
@@ -54,15 +121,19 @@ chmod +x setup_orpheus.sh
 
 ## Available Voices
 
-The WebUI provides access to all 8 voices in order of conversational realism:
-- tara
-- jess
-- leo
-- leah
-- dan
-- mia
-- zac
-- zoe
+The WebUI and FastAPI server provide access to voices in multiple languages:
+
+**English** (in order of conversational realism):
+- tara, leah, jess, leo, dan, mia, zac, zoe
+
+**Other Languages**:
+- French: pierre, amelie, marie
+- German: jana, thomas, max
+- Korean: 유나, 준서
+- Hindi: ऋतिका
+- Mandarin: 长乐, 白芷
+- Spanish: javi, sergio, maria
+- Italian: pietro, giulia, carlo
 
 ## Emotive Tags
 
@@ -83,13 +154,64 @@ The new Long Form feature lets you generate speech for larger text inputs:
 1. **Text Chunking**: Text is automatically split into manageable chunks at sentence boundaries
 2. **Parallel Processing**: Process multiple chunks simultaneously based on the batch size setting
 3. **Parameter Optimization**: The Long Form tab offers optimized default settings for extended content
-4. **Simple Assembly**: All audio chunks are automatically combined into a single cohesive output file
+4. **Simple Assembly**: All audio chunks are automatically combined into a single cohesive output file with crossfade stitching
 
 This is ideal for:
 - Articles and blog posts
 - Scripts and dialogues
 - Books and stories
 - Any text content that exceeds a few paragraphs
+
+## Text Sanitization
+
+The FastAPI server includes automatic text sanitization for better pronunciation:
+
+| Input Type | Example Input | Spoken Output |
+|------------|--------------|---------------|
+| URLs | `https://example.com` | "https example dot com" |
+| Emails | `user@test.com` | "user at test dot com" |
+| Money | `$50.30` | "fifty dollars and thirty cents" |
+| Numbers | `1035` | "one thousand and thirty-five" |
+| Time | `10:35 pm` | "ten thirty-five pm" |
+| Years | `1998` | "nineteen ninety-eight" |
+| Abbreviations | `Dr. Smith` | "Doctor Smith" |
+| Symbols | `@`, `&`, `%` | "at", "and", "percent" |
+
+Sanitization is enabled by default and can be controlled via the API.
+
+## API Endpoints
+
+The FastAPI server provides OpenAI-compatible endpoints:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/audio/speech` | POST | Generate speech (OpenAI-compatible) |
+| `/v1/audio/voices` | GET | List available voices |
+| `/speak` | POST | Legacy TTS endpoint |
+| `/sanitize` | POST | Preview text sanitization |
+| `/health` | GET | Health check |
+| `/docs` | GET | OpenAPI documentation |
+
+## Configuration
+
+Configure the server via `.env` file:
+
+```env
+# LMStudio API URL
+ORPHEUS_API_URL=http://127.0.0.1:1234/v1/completions
+
+# Model name (empty = use loaded model)
+ORPHEUS_MODEL_NAME=
+
+# Generation parameters
+ORPHEUS_MAX_TOKENS=8192
+ORPHEUS_TEMPERATURE=0.6
+ORPHEUS_TOP_P=0.9
+
+# Server settings
+ORPHEUS_PORT=5005
+ORPHEUS_HOST=0.0.0.0
+```
 
 ## Troubleshooting
 
